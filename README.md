@@ -1,74 +1,62 @@
 Jenkins Test Job
 
 ```
-pipeline {
+node {
     agent any
-    tools { 
-        maven 'Jenkins Maven' 
+    tools {
+        maven 'Maven'
     }
-
+    environment {
+        NEXUS_REPOSITORY = "maven-releases"
+        ARTIFACT_ID = "tarun-artifact"
+    }
     stages {
-        stage('Build') {
-            steps {
-                snDevOpsStep()
-                sh '''
-                    export M2_HOME=/opt/apache-maven-3.6.0 # your Mavan home path
-                    export PATH=$PATH:$M2_HOME/bin
-                    mvn --version
-                '''
-                sh 'mvn compile'   
-            }
-        }
-
-        stage('Test') {
-            steps {
-                snDevOpsStep()
-                sh '''
-                    export M2_HOME=/opt/apache-maven-3.6.0 # your Mavan home path
-                    export PATH=$PATH:$M2_HOME/bin
-                    mvn --version
-                '''
-
-                sh 'mvn verify'
-                sh 'mvn package'
-
-                script {
-                    sshPublisher(continueOnError: false, failOnError: true,
-                    publishers: [
-                        sshPublisherDesc(
-                            configName:'CorpSite UAT',
-                            verbose: true,
-                            transfers: [
-                                sshTransfer(
-                                    sourceFiles: 'target/globex-web.war',
-                                    removePrefix: 'target/',
-                                    remoteDirectory: '/opt/tomcat/webapps'
-                                )
-                            ]
-                        )
-                    ])
-                }
-                sh 'mvn compile'
-                sh 'mvn verify'
-                getCurrentBuildFailedTests("Test")
-            }
-            post {
-                success {
-                    junit '**/target/surefire-reports/*.xml' 
-                }
-            }
-        }
-
-        stage('Publish') {
+        stage("checkout") {
             steps {
                 snDevOpsStep()
                 snDevOpsChange()
-                snDevOpsArtifact(artifactsPayload:"""{"artifacts": [{"name": "globex-web.war","version":"3.${env.BUILD_NUMBER}.0","semanticVersion": "3.${env.BUILD_NUMBER}.0","repositoryName": "Repo1"}]}""")
+                echo "Building" 
+                checkout scm
+            }
+        }
+
+        stage("build") {
+            steps {
+                snDevOpsStep()
+                snDevOpsChange()
+                echo "Building" 
+                sh "mvn clean package"
+                // artifact register - semantic version, stage name and branch are optional
+                snDevOpsArtifact(artifactsPayload:"""{"artifacts": [{"name": "${ARTIFACT_ID}","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "${NEXUS_REPOSITORY}"}]}""")  
+                
+            }
+        }
+
+        stage('test') {
+            steps {
+                snDevOpsStep()
+                snDevOpsChange()
+                echo "Unit Test"
+                sh "mvn test"
+                getCurrentBuildFailedTests("test")
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml' 
+                }
+          }
+        }
+
+        stage("deploy") {
+            steps{
+                snDevOpsStep()                    
+                snDevOpsPackage(name: "tarun-package-1.${env.BUILD_ID}.0", artifactsPayload: """{"artifacts": [{"name": "${ARTIFACT_ID}","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "${NEXUS_REPOSITORY}"}]}""")
+                snDevOpsChange()
+                echo "deploy"
             }
         }
     }
 }
-
 
 def getCurrentBuildFailedTests(String stageName) {
  def build = currentBuild.build()
@@ -79,7 +67,7 @@ def getCurrentBuildFailedTests(String stageName) {
    def jsonString = "{'stageName':$stageName, 'name':${result.getDisplayName()}, 'url':${result.getUpUrl()}, 'totalTests':${totalTests}, 'passedTests':${result.getPassCount()}, 'failedTests':${result.getFailCount()}, 'skippedTests':${result.getSkipCount()}, 'duration':${result.getDuration()}, 'buildNumber':${env.BUILD_NUMBER}, 'pipelineName':${env.JOB_NAME}}"
    def parser = new JsonSlurper()
    def json = parser.parseText(str)
-   def response = ["curl", "-k", "-X", "POST", "-H", "Content-Type: application/json", "-d", "${json}", "https://devops.integration.user:devops@devopsoutsideintesting.service-now.com/api/sn_devops/v1/devops/tool/test?toolId=8587c1f6db538c10c93442c5059619c5&testType=Integration"].execute()
+   def response = ["curl", "-k", "-X", "POST", "-H", "Content-Type: application/json", "-d", "${json}", "https://devops.integration.user:devops@192.168.0.110:8080/api/sn_devops/v1/devops/tool/test?toolId=bb7526d55b3c1010598a16a0ab81c755&testType=Integration"].execute()
    response.waitFor()
    println response.err.text
    println response.text
