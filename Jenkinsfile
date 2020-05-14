@@ -1,56 +1,34 @@
-node {
-    tools {
-        maven 'Maven'
+node { 
+    def mvnTool = tool 'Maven'
+    stage("checkout") {
+      snDevOpsStep()
+      snDevOpsChange()
+      echo "Building" 
+      //checkout scm
     }
-    environment {
-        NEXUS_REPOSITORY = "maven-releases"
-        ARTIFACT_ID = "tarun-artifact"
+
+    stage("build") {
+      snDevOpsStep()
+      snDevOpsChange()
+      echo "Building" 
+      sh "${mvnTool}/bin/mvn clean package"
+      // artifact register - semantic version, stage name and branch are optional
+      snDevOpsArtifact(artifactsPayload:"""{"artifacts": [{"name": "tarun-artifact","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "maven-releases"}]}""")  
     }
-    stages {
-        stage("checkout") {
-            steps {
-                snDevOpsStep()
-                snDevOpsChange()
-                echo "Building" 
-                checkout scm
-            }
-        }
 
-        stage("build") {
-            steps {
-                snDevOpsStep()
-                snDevOpsChange()
-                echo "Building" 
-                sh "mvn clean package"
-                // artifact register - semantic version, stage name and branch are optional
-                snDevOpsArtifact(artifactsPayload:"""{"artifacts": [{"name": "${ARTIFACT_ID}","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "${NEXUS_REPOSITORY}"}]}""")  
-                
-            }
-        }
+    stage('test') {
+      snDevOpsStep()
+      snDevOpsChange()
+      echo "Unit Test"
+      sh "${mvnTool}/bin/mvn test"
+      getCurrentBuildFailedTests("test")
+    }
 
-        stage('test') {
-            steps {
-                snDevOpsStep()
-                snDevOpsChange()
-                echo "Unit Test"
-                sh "mvn test"
-                getCurrentBuildFailedTests("test")
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml' 
-                }
-          }
-        }
-
-        stage("deploy") {
-            steps{
-                snDevOpsStep()                    
-                snDevOpsPackage(name: "tarun-package-1.${env.BUILD_ID}.0", artifactsPayload: """{"artifacts": [{"name": "${ARTIFACT_ID}","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "${NEXUS_REPOSITORY}"}]}""")
-                snDevOpsChange()
-                echo "deploy"
-            }
-        }
+    stage("deploy") {
+      snDevOpsStep()                    
+      snDevOpsPackage(name: "tarun-package-1.${env.BUILD_ID}.0", artifactsPayload: """{"artifacts": [{"name": "tarun-artifact","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "maven-releases"}]}""")
+      snDevOpsChange()
+      echo "deploy"
     }
 }
 
