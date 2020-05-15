@@ -52,7 +52,7 @@ def getCurrentBuildFailedTests(String stageName) {
    jsonObj.put("buildNumber", env.BUILD_NUMBER)
    jsonObj.put("pipelineName", env.JOB_NAME)
    def json = new groovy.json.JsonBuilder(jsonObj)
-   def response = ["curl", "-k", "-X", "POST", "-H", "Content-Type: application/json", "-d", "${json}", "https://devops.integration.user:devops@192.168.0.110:8080/api/sn_devops/v1/devops/tool/test?toolId=bb7526d55b3c1010598a16a0ab81c755&testType=Integration"].execute()
+   def response = ["curl", "-k", "-X", "POST", "-H", "Content-Type: application/json", "-d", "${json}", "http://devops.integration.user:devops@192.168.0.110:8080/api/sn_devops/v1/devops/tool/test?toolId=bb7526d55b3c1010598a16a0ab81c755&testType=Integration"].execute()
    response.waitFor()
    echo response.err.text
    echo response.text
