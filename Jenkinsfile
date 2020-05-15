@@ -43,7 +43,7 @@ def getCurrentBuildFailedTests(String stageName) {
   def result = build.getAction(hudson.tasks.junit.TestResultAction.class).getResult();
   if (result) {
    jsonObj.put("name", result.getDisplayName())
-   jsonObj.put("url", $BUILD_URL)
+   jsonObj.put("url", ${env.BUILD_URL})
    jsonObj.put("totalTests", result.getTotalCount())
    jsonObj.put("passedTests", result.getPassCount())
    jsonObj.put("failedTests", result.getFailCount())
