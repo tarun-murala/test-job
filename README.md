@@ -7,7 +7,7 @@ node {
       snDevOpsStep()
       snDevOpsChange()
       echo "Building" 
-      //checkout scm
+      checkout scm
     }
 
     stage("build") {
@@ -25,7 +25,7 @@ node {
       echo "Unit Test"
       sh "${mvnTool}/bin/mvn test"
       junit '**/target/surefire-reports/*.xml' 
-      getCurrentBuildFailedTests("test")
+      getCurrentBuildFailedTests("test", "${env.BUILD_URL}", "${env.JOB_NAME}")
     }
 
     stage("deploy") {
@@ -36,7 +36,7 @@ node {
     }
 }
 
-def getCurrentBuildFailedTests(String stageName) {
+def getCurrentBuildFailedTests(String stageName, String jobUrl, String jobName) {
  echo "Into getCurrentBuildFailedTests: $stageName"
  def jsonObj = [: ]
  jsonObj.put("stageName", stageName)
@@ -46,7 +46,8 @@ def getCurrentBuildFailedTests(String stageName) {
   def result = build.getAction(hudson.tasks.junit.TestResultAction.class).getResult();
   if (result) {
    jsonObj.put("name", result.getDisplayName())
-   jsonObj.put("url", result.getUrl())
+   jsonObj.put("jobName", jobName)
+   jsonObj.put("url", jobUrl)
    jsonObj.put("totalTests", result.getTotalCount())
    jsonObj.put("passedTests", result.getPassCount())
    jsonObj.put("failedTests", result.getFailCount())
@@ -62,6 +63,4 @@ def getCurrentBuildFailedTests(String stageName) {
  }
 }
 }
-
-
 ```
