@@ -40,7 +40,7 @@ def getCurrentBuildFailedTests(String stageName) {
  if (action) {
   def result = build.getAction(hudson.tasks.junit.TestResultAction.class).getResult();
   if (result) {
-   def jsonString = "{'stageName':$stageName, 'name':${result.getDisplayName()}, 'url':${result.getUrl()}, 'totalTests':${totalTests}, 'passedTests':${result.getPassCount()}, 'failedTests':${result.getFailCount()}, 'skippedTests':${result.getSkipCount()}, 'duration':${result.getDuration()}, 'buildNumber':${env.BUILD_NUMBER}, 'pipelineName':${env.JOB_NAME}}"
+   def jsonString = "{\"stageName\":$stageName, \"name\":${result.getDisplayName()}, \"url\":${result.getUrl()}, \"totalTests\":${totalTests}, \"passedTests\":${result.getPassCount()}, \"failedTests\":${result.getFailCount()}, \"skippedTests\":${result.getSkipCount()}, \"duration\":${result.getDuration()}, \"buildNumber\":${env.BUILD_NUMBER}, \"pipelineName\":${env.JOB_NAME}}"
    echo "jsonString: $jsonString"
    def parser = new groovy.json.JsonSlurper()
    def json = parser.parseText(str)
