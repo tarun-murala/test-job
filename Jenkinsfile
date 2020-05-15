@@ -4,7 +4,7 @@ node {
       snDevOpsStep()
       snDevOpsChange()
       echo "Building" 
-      //checkout scm
+      checkout scm
     }
 
     stage("build") {
