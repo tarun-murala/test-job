@@ -21,6 +21,7 @@ node {
       snDevOpsChange()
       echo "Unit Test"
       sh "${mvnTool}/bin/mvn test"
+      junit '**/target/surefire-reports/*.xml' 
       getCurrentBuildFailedTests("test")
     }
 
