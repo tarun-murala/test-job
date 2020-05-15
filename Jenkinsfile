@@ -13,7 +13,7 @@ node {
       echo "Building" 
       sh "${mvnTool}/bin/mvn clean package"
       // artifact register - semantic version, stage name and branch are optional
-      snDevOpsArtifact(artifactsPayload:"""{"artifacts": [{"name": "tarun-artifact","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "maven-releases"}]}""")  
+      snDevOpsArtifact(artifactsPayload:"""{"artifacts": [{"name": "tarun-artifact","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "maven-releases", "branchName": "master"}]}""")  
     }
 
     stage('test') {
@@ -26,7 +26,7 @@ node {
 
     stage("deploy") {
       snDevOpsStep()                    
-      snDevOpsPackage(name: "tarun-package-1.${env.BUILD_ID}.0", artifactsPayload: """{"artifacts": [{"name": "tarun-artifact","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "maven-releases"}]}""")
+      snDevOpsPackage(name: "tarun-package-1.${env.BUILD_ID}.0", artifactsPayload: """{"artifacts": [{"name": "tarun-artifact","version": "1.${env.BUILD_NUMBER}.0","semanticVersion": "1.${env.BUILD_NUMBER}.0","repositoryName": "maven-releases", "branchName": "master"}]}""")
       snDevOpsChange()
       echo "deploy"
     }
