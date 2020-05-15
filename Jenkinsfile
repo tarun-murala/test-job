@@ -22,7 +22,7 @@ node {
       echo "Unit Test"
       sh "${mvnTool}/bin/mvn test"
       junit '**/target/surefire-reports/*.xml' 
-      getCurrentBuildFailedTests("test", "${env.BUILD_URL}")
+      getCurrentBuildFailedTests("test", "${env.BUILD_URL}", "${env.JOB_NAME}")
     }
 
     stage("deploy") {
@@ -33,7 +33,7 @@ node {
     }
 }
 
-def getCurrentBuildFailedTests(String stageName, String jobUrl) {
+def getCurrentBuildFailedTests(String stageName, String jobUrl, string jobName) {
  echo "Into getCurrentBuildFailedTests: $stageName"
  def jsonObj = [: ]
  jsonObj.put("stageName", stageName)
@@ -43,6 +43,7 @@ def getCurrentBuildFailedTests(String stageName, String jobUrl) {
   def result = build.getAction(hudson.tasks.junit.TestResultAction.class).getResult();
   if (result) {
    jsonObj.put("name", result.getDisplayName())
+   jsonObj.put("jobName", jobName)
    jsonObj.put("url", jobUrl)
    jsonObj.put("totalTests", result.getTotalCount())
    jsonObj.put("passedTests", result.getPassCount())
