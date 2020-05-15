@@ -32,6 +32,7 @@ node {
     }
 }
 
+@NonCPS
 def getCurrentBuildFailedTests(String stageName) {
  def build = currentBuild.build()
  def action = build.getActions(hudson.tasks.junit.TestResultAction.class)
