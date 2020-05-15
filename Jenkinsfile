@@ -35,15 +35,23 @@ node {
 
 def getCurrentBuildFailedTests(String stageName) {
  echo "Into getCurrentBuildFailedTests: $stageName"
+ def jsonObj = [: ]
+ jsonObj.put("stageName", stageName)
  def build = currentBuild.build()
  def action = build.getActions(hudson.tasks.junit.TestResultAction.class)
  if (action) {
   def result = build.getAction(hudson.tasks.junit.TestResultAction.class).getResult();
   if (result) {
-   def jsonString = "{'stageName':$stageName, 'name':${result.getDisplayName()}, 'url':${result.getUrl()}, 'totalTests':${totalTests}, 'passedTests':${result.getPassCount()}, 'failedTests':${result.getFailCount()}, 'skippedTests':${result.getSkipCount()}, 'duration':${result.getDuration()}, 'buildNumber':${env.BUILD_NUMBER}, 'pipelineName':${env.JOB_NAME}}"
-   echo "jsonString: $jsonString"
-   def parser = new groovy.json.JsonSlurper()
-   def json = parser.parseText(jsonString)
+   jsonObj.put("name", result.getDisplayName())
+   jsonObj.put("url", result.getUpUrl())
+   jsonObj.put("totalTests", result.getTotalCount())
+   jsonObj.put("passedTests", result.getPassCount())
+   jsonObj.put("failedTests", result.getFailCount())
+   jsonObj.put("skippedTests", result.getSkipCount())
+   jsonObj.put("duration", result.getDuration())
+   jsonObj.put("buildNumber", env.BUILD_NUMBER)
+   jsonObj.put("pipelineName", env.JOB_NAME)
+   def json = new groovy.json.JsonBuilder(jsonObj)
    def response = ["curl", "-k", "-X", "POST", "-H", "Content-Type: application/json", "-d", "${json}", "https://devops.integration.user:devops@192.168.0.110:8080/api/sn_devops/v1/devops/tool/test?toolId=bb7526d55b3c1010598a16a0ab81c755&testType=Integration"].execute()
    response.waitFor()
    echo response.err.text
