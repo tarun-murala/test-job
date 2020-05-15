@@ -33,7 +33,7 @@ node {
     }
 }
 
-def getCurrentBuildFailedTests(String stageName, String jobUrl, string jobName) {
+def getCurrentBuildFailedTests(String stageName, String jobUrl, String jobName) {
  echo "Into getCurrentBuildFailedTests: $stageName"
  def jsonObj = [: ]
  jsonObj.put("stageName", stageName)
